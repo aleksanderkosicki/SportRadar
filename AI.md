@@ -4,7 +4,7 @@ AI was used to generate the initial version of codebase
 
 ### Prompt history and other contextual information
 
-Github copilot prompt history for the initial code:
+#### Github copilot prompt history for the initial code:
 
 - Can you help me with coding?
 - The tech stack is pure java 17 and maven.
@@ -43,5 +43,24 @@ Github copilot prompt history for the initial code:
     2) in the methods updateScore and finishMatch we should use homeTeam and awayTeam instead of the matchID
     3) the matchId should not be visible to the library user
 - Could you please update tests accordingly?
+
+
+#### Github copilot prompts for the synchronization discussion:
+
+- can you check if the SportRadar class code is multi-thread safe?
+- but then we would have the race condition if one update happens during another
+- How would you do the ConcurrentHashMap with optimistic locking?
+- please do not change the sorting behaviour
+- that sorting is broken, only one reversed() is needed there
+- at which point snapshot in the getMatchesSummary() method is created?
+- You have convinced me. Please replace the SportRadar with the one you suggested (i.e. without explicit 'synchronized' keywords and with the synchronized collection)
+- Please do not cast the id to String
+- one more remark regarding the updateScore. We would like to retry only if the totalScore we are trying to write down is larger the the one updated by other thread. Please fix that
+- please commit the changes
+- scan all the classes for errors now
+- please use the Match id for sorting, not the startTime
+- it's better, also please remove the unused methods (getMatch and getAllMatches)
+
+End of monthly quota for the copilot here happened.
 
 ### artifacts that guided the implementation
