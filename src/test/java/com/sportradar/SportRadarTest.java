@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -125,5 +127,57 @@ class SportRadarTest {
         assertEquals(1, summary.size());
         assertEquals("Spain", summary.get(0).getHomeTeam());
         assertEquals("Brazil", summary.get(0).getAwayTeam());
+    }
+
+    @Test
+    void multithreadingTest() {
+        final int THREAD_NUM = 100;
+        final CountDownLatch step1 = new CountDownLatch(THREAD_NUM);
+        final CountDownLatch step2 = new CountDownLatch(THREAD_NUM);
+        for (int i = 0; i < THREAD_NUM; i++) {
+            final int threadNum = i;
+            new Thread(()-> {
+                Random rn = new Random();
+                matchTracker.startMatch("A" + threadNum, "B"+ threadNum);
+                matchTracker.updateScore("A" + threadNum, "B"+ threadNum,
+                        rn.nextInt(3), rn.nextInt(3));
+
+                step1.countDown();
+                try {
+                    step1.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                for (int k = 0; k < 10; k++) {
+                    int teamNum = rn.nextInt(THREAD_NUM);
+                    int homeScore = 3 + rn.nextInt(k+1);
+                    int awayScore = 3 + rn.nextInt(k+1);
+                    matchTracker.updateScore("A" + teamNum, "B" + teamNum,
+                            homeScore, awayScore);
+                }
+
+                try {
+                    step2.countDown();
+                    step2.await();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                if (threadNum == 0) {
+                    List<Match> matches = matchTracker.getMatchesSummary();
+                    assertEquals(100, matches.size());
+                    assertMatchesInOrder(matches);
+                }
+            }).start();
+        }
+    }
+
+    private void assertMatchesInOrder(List<Match> matches) {
+        for(int i = 0; i < matches.size(); i++) {
+            for (int j = i + 1; j < matches.size(); j++) {
+                Match a = matches.get(i);
+                Match b = matches.get(j);
+                assertTrue(a.getTotalScore() >= b.getTotalScore());
+            }
+        }
     }
 }
