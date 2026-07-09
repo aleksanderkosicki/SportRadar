@@ -2,6 +2,7 @@ package com.sportradar;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.AtomicLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -15,21 +16,19 @@ import java.util.stream.Collectors;
  */
 class SportRadar implements MatchTracker {
     private final Map<String, Match> matches = new ConcurrentHashMap<>();
+    private final AtomicLong matchIdCounter = new AtomicLong(0);
 
     /**
      * Starts a new match.
+     * The match ID is generated internally using a thread-safe atomic counter.
      *
-     * @param id unique identifier for the match
      * @param homeTeam name of the home team
      * @param awayTeam name of the away team
      * @return the created match
-     * @throws IllegalArgumentException if a match with the same ID already exists
      */
     @Override
-    public Match startMatch(String id, String homeTeam, String awayTeam) {
-        if (matches.containsKey(id)) {
-            throw new IllegalArgumentException("Match with ID " + id + " already exists");
-        }
+    public Match startMatch(String homeTeam, String awayTeam) {
+        String id = String.valueOf(matchIdCounter.incrementAndGet());
         Match match = new Match(id, homeTeam, awayTeam, LocalDateTime.now());
         matches.put(id, match);
         return match;
@@ -37,6 +36,7 @@ class SportRadar implements MatchTracker {
 
     /**
      * Updates the score of an in-progress match.
+     * Returns a new Match instance with updated scores and stores it.
      *
      * @param matchId the ID of the match to update
      * @param homeScore the home team's new score
@@ -49,7 +49,8 @@ class SportRadar implements MatchTracker {
         if (match == null) {
             throw new IllegalArgumentException("Match with ID " + matchId + " not found");
         }
-        match.updateScore(homeScore, awayScore);
+        Match updatedMatch = match.updateScore(homeScore, awayScore);
+        matches.put(matchId, updatedMatch);
     }
 
     /**
