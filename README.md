@@ -2,7 +2,7 @@ Assumptions
   - library must be thread safe
   - no external persistence is needed
   - teams are identified by there unique names
-  - start times are implicitly added when match is started
+  - we do not need to remember starts times,  just the order
   - interface is as simple as possible
 
 Reasoning
@@ -10,3 +10,4 @@ Reasoning
 
 Trade-offs made
   - synchronization
+
