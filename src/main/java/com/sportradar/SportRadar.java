@@ -24,47 +24,49 @@ class SportRadar implements MatchTracker {
      *
      * @param homeTeam name of the home team
      * @param awayTeam name of the away team
-     * @return the created match
      */
     @Override
-    public Match startMatch(String homeTeam, String awayTeam) {
+    public void startMatch(String homeTeam, String awayTeam) {
         String id = String.valueOf(matchIdCounter.incrementAndGet());
         Match match = new Match(id, homeTeam, awayTeam, LocalDateTime.now());
-        matches.put(id, match);
-        return match;
+        matches.put(getMatchKey(homeTeam, awayTeam), match);
     }
 
     /**
      * Updates the score of an in-progress match.
      * Returns a new Match instance with updated scores and stores it.
      *
-     * @param matchId the ID of the match to update
+     * @param homeTeam name of the home team
+     * @param awayTeam name of the away team
      * @param homeScore the home team's new score
      * @param awayScore the away team's new score
      * @throws IllegalArgumentException if the match does not exist
      */
     @Override
-    public void updateScore(String matchId, int homeScore, int awayScore) {
-        Match match = matches.get(matchId);
+    public void updateScore(String homeTeam, String awayTeam, int homeScore, int awayScore) {
+        String key = getMatchKey(homeTeam, awayTeam);
+        Match match = matches.get(key);
         if (match == null) {
-            throw new IllegalArgumentException("Match with ID " + matchId + " not found");
+            throw new IllegalArgumentException("Match between " + homeTeam + " and " + awayTeam + " not found");
         }
         Match updatedMatch = match.updateScore(homeScore, awayScore);
-        matches.put(matchId, updatedMatch);
+        matches.put(key, updatedMatch);
     }
 
     /**
      * Finishes a match and removes it from tracking.
      *
-     * @param matchId the ID of the match to finish
+     * @param homeTeam name of the home team
+     * @param awayTeam name of the away team
      * @throws IllegalArgumentException if the match does not exist
      */
     @Override
-    public void finishMatch(String matchId) {
-        if (!matches.containsKey(matchId)) {
-            throw new IllegalArgumentException("Match with ID " + matchId + " not found");
+    public void finishMatch(String homeTeam, String awayTeam) {
+        String key = getMatchKey(homeTeam, awayTeam);
+        if (!matches.containsKey(key)) {
+            throw new IllegalArgumentException("Match between " + homeTeam + " and " + awayTeam + " not found");
         }
-        matches.remove(matchId);
+        matches.remove(key);
     }
 
     /**
@@ -84,13 +86,22 @@ class SportRadar implements MatchTracker {
     }
 
     /**
-     * Gets a specific match by ID.
+     * Generates a unique key for a match based on team names.
+     * (Package-private helper method)
+     */
+    private String getMatchKey(String homeTeam, String awayTeam) {
+        return homeTeam + " vs " + awayTeam;
+    }
+
+    /**
+     * Gets a specific match by team names.
      *
-     * @param matchId the ID of the match to retrieve
+     * @param homeTeam name of the home team
+     * @param awayTeam name of the away team
      * @return the match, or null if not found
      */
-    public Match getMatch(String matchId) {
-        return matches.get(matchId);
+    public Match getMatch(String homeTeam, String awayTeam) {
+        return matches.get(getMatchKey(homeTeam, awayTeam));
     }
 
     /**
