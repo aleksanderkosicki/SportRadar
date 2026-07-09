@@ -110,9 +110,7 @@ public final class Match {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Match match = (Match) o;
-        return homeScore == match.homeScore &&
-                awayScore == match.awayScore &&
-                Objects.equals(id, match.id);
+        return id == match.id;
     }
 
     @Override
