@@ -2,7 +2,7 @@ package com.sportradar;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.AtomicLong;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -115,7 +115,7 @@ class SportRadar implements MatchTracker {
         return snapshot.stream()
                 .sorted(Comparator
                         .comparingInt(Match::getTotalScore)
-                        .thenComparing(Match::getStartTime)
+                        .thenComparingLong(Match::getId)
                         .reversed())
                 .collect(Collectors.toList());
     }
@@ -126,25 +126,5 @@ class SportRadar implements MatchTracker {
      */
     private String getMatchKey(String homeTeam, String awayTeam) {
         return homeTeam + " vs " + awayTeam;
-    }
-
-    /**
-     * Gets a specific match by team names.
-     *
-     * @param homeTeam name of the home team
-     * @param awayTeam name of the away team
-     * @return the match, or null if not found
-     */
-    public Match getMatch(String homeTeam, String awayTeam) {
-        return matches.get(getMatchKey(homeTeam, awayTeam));
-    }
-
-    /**
-     * Gets all matches currently being tracked.
-     *
-     * @return collection of all matches in progress
-     */
-    public Collection<Match> getAllMatches() {
-        return Collections.unmodifiableCollection(matches.values());
     }
 }
