@@ -51,7 +51,7 @@ class SportRadarTest {
     @Test
     void testUpdateScoreNonExistentMatch() {
         assertThrows(IllegalArgumentException.class, () ->
-                matchTracker.updateScore("NonExistent", "Teams")
+                matchTracker.updateScore("NonExistent", "Teams", 0, 0)
         );
     }
 

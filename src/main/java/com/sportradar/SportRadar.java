@@ -2,7 +2,7 @@ package com.sportradar;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.AtomicLong;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
