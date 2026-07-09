@@ -1,7 +1,9 @@
 package com.sportradar;
 
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.AtomicLong;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -11,9 +13,11 @@ import java.util.stream.Collectors;
  * - Update the score
  * - Finish a match (removes it from tracking)
  * - Get a summary of matches in progress
+ * 
+ * Uses optimistic locking with ConcurrentHashMap for better concurrency.
  */
 class SportRadar implements MatchTracker {
-    private final Map<String, Match> matches = new HashMap<>();
+    private final Map<String, Match> matches = new ConcurrentHashMap<>();
     private final AtomicLong matchIdCounter = new AtomicLong(0);
 
     /**
@@ -24,20 +28,23 @@ class SportRadar implements MatchTracker {
      * @param awayTeam name of the away team
      */
     @Override
-    public synchronized void startMatch(String homeTeam, String awayTeam) {
+    public void startMatch(String homeTeam, String awayTeam) {
         String key = getMatchKey(homeTeam, awayTeam);
-        if (matches.containsKey(key)) {
+        
+        // Use putIfAbsent for atomic insert-if-absent
+        long id = matchIdCounter.incrementAndGet();
+        Match newMatch = new Match(id, homeTeam, awayTeam);
+        Match existing = matches.putIfAbsent(key, newMatch);
+        
+        if (existing != null) {
             throw new IllegalArgumentException("Match between " + homeTeam + " and " + awayTeam + " already started");
         }
-
-        long id = matchIdCounter.incrementAndGet();
-        Match match = new Match(id, homeTeam, awayTeam);
-        matches.put(getMatchKey(homeTeam, awayTeam), match);
     }
 
     /**
      * Updates the score of an in-progress match.
-     * Returns a new Match instance with updated scores and stores it.
+     * Uses optimistic locking with compare-and-swap to handle concurrent updates.
+     * Retries only if another thread's update resulted in a lower total score.
      *
      * @param homeTeam name of the home team
      * @param awayTeam name of the away team
@@ -46,15 +53,34 @@ class SportRadar implements MatchTracker {
      * @throws IllegalArgumentException if the match does not exist
      */
     @Override
-    public synchronized void updateScore(String homeTeam, String awayTeam, int homeScore, int awayScore) {
+    public void updateScore(String homeTeam, String awayTeam, int homeScore, int awayScore) {
         String key = getMatchKey(homeTeam, awayTeam);
-
-        Match match = matches.get(key);
-        if (match == null) {
-            throw new IllegalArgumentException("Match between " + homeTeam + " and " + awayTeam + " not found");
+        int newTotalScore = homeScore + awayScore;
+        
+        while (true) {
+            Match oldMatch = matches.get(key);
+            if (oldMatch == null) {
+                throw new IllegalArgumentException("Match between " + homeTeam + " and " + awayTeam + " not found");
+            }
+            
+            // Create updated match (immutable, so new instance)
+            Match newMatch = oldMatch.updateScore(homeScore, awayScore);
+            
+            // Try to replace - only succeeds if oldMatch is still in the map (compare-and-swap)
+            if (matches.replace(key, oldMatch, newMatch)) {
+                return; // Success!
+            }
+            
+            // Another thread updated the match. Check if we should retry.
+            Match currentMatch = matches.get(key);
+            if (currentMatch != null && currentMatch.getTotalScore() < newTotalScore) {
+                // Current total score is lower, retry to apply our update
+                continue;
+            }
+            
+            // Current total score is higher or equal, accept the other thread's update
+            return;
         }
-        Match updatedMatch = match.updateScore(homeScore, awayScore);
-        matches.put(key, updatedMatch);
     }
 
     /**
@@ -65,12 +91,13 @@ class SportRadar implements MatchTracker {
      * @throws IllegalArgumentException if the match does not exist
      */
     @Override
-    public synchronized void finishMatch(String homeTeam, String awayTeam) {
+    public void finishMatch(String homeTeam, String awayTeam) {
         String key = getMatchKey(homeTeam, awayTeam);
-        if (!matches.containsKey(key)) {
+        Match match = matches.remove(key);
+        
+        if (match == null) {
             throw new IllegalArgumentException("Match between " + homeTeam + " and " + awayTeam + " not found");
         }
-        matches.remove(key);
     }
 
     /**
@@ -82,14 +109,14 @@ class SportRadar implements MatchTracker {
      */
     @Override
     public List<Match> getMatchesSummary() {
-        List<Match> matchesList;
-        synchronized(this) {
-            matchesList = new ArrayList<>(matches.values());
-        }
-        return matchesList.stream()
+        // Create explicit snapshot to protect against concurrent modifications during sorting
+        List<Match> snapshot = new ArrayList<>(matches.values());
+        
+        return snapshot.stream()
                 .sorted(Comparator
                         .comparingInt(Match::getTotalScore)
-                        .thenComparingLong(Match::getId).reversed())
+                        .thenComparing(Match::getStartTime)
+                        .reversed())
                 .collect(Collectors.toList());
     }
 
@@ -99,5 +126,25 @@ class SportRadar implements MatchTracker {
      */
     private String getMatchKey(String homeTeam, String awayTeam) {
         return homeTeam + " vs " + awayTeam;
+    }
+
+    /**
+     * Gets a specific match by team names.
+     *
+     * @param homeTeam name of the home team
+     * @param awayTeam name of the away team
+     * @return the match, or null if not found
+     */
+    public Match getMatch(String homeTeam, String awayTeam) {
+        return matches.get(getMatchKey(homeTeam, awayTeam));
+    }
+
+    /**
+     * Gets all matches currently being tracked.
+     *
+     * @return collection of all matches in progress
+     */
+    public Collection<Match> getAllMatches() {
+        return Collections.unmodifiableCollection(matches.values());
     }
 }
