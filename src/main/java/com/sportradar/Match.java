@@ -8,12 +8,11 @@ import java.util.Objects;
  * To update the score, use the updateScore method which returns a new Match instance.
  */
 public final class Match {
-    private final String id;
+    private final long id;
     private final String homeTeam;
     private final String awayTeam;
     private final int homeScore;
     private final int awayScore;
-    private final LocalDateTime startTime;
 
     /**
      * Creates a new match.
@@ -21,21 +20,19 @@ public final class Match {
      * @param id unique identifier for the match
      * @param homeTeam name of the home team
      * @param awayTeam name of the away team
-     * @param startTime when the match was started
      */
-    public Match(String id, String homeTeam, String awayTeam, LocalDateTime startTime) {
-        this(id, homeTeam, awayTeam, 0, 0, startTime);
+    public Match(long id, String homeTeam, String awayTeam) {
+        this(id, homeTeam, awayTeam, 0, 0);
     }
 
     /**
      * Creates a new match with specified scores.
      * (Package-private constructor used internally)
      */
-    Match(String id, String homeTeam, String awayTeam, int homeScore, int awayScore, LocalDateTime startTime) {
+    Match(long id, String homeTeam, String awayTeam, int homeScore, int awayScore) {
         this.id = Objects.requireNonNull(id, "Match ID cannot be null");
         this.homeTeam = Objects.requireNonNull(homeTeam, "Home team name cannot be null");
         this.awayTeam = Objects.requireNonNull(awayTeam, "Away team name cannot be null");
-        this.startTime = Objects.requireNonNull(startTime, "Start time cannot be null");
         
         if (homeScore < 0 || awayScore < 0) {
             throw new IllegalArgumentException("Scores cannot be negative");
@@ -48,7 +45,7 @@ public final class Match {
     /**
      * Gets the match ID.
      */
-    public String getId() {
+    public long getId() {
         return id;
     }
 
@@ -88,13 +85,6 @@ public final class Match {
     }
 
     /**
-     * Gets when the match was started.
-     */
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    /**
      * Returns a new Match with updated scores.
      * This Match instance remains unchanged.
      *
@@ -107,7 +97,7 @@ public final class Match {
         if (homeScore < 0 || awayScore < 0) {
             throw new IllegalArgumentException("Scores cannot be negative");
         }
-        return new Match(this.id, this.homeTeam, this.awayTeam, homeScore, awayScore, this.startTime);
+        return new Match(this.id, this.homeTeam, this.awayTeam, homeScore, awayScore);
     }
 
     @Override
@@ -122,12 +112,11 @@ public final class Match {
         Match match = (Match) o;
         return homeScore == match.homeScore &&
                 awayScore == match.awayScore &&
-                Objects.equals(id, match.id) &&
-                Objects.equals(startTime, match.startTime);
+                Objects.equals(id, match.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, startTime);
+        return Objects.hash(id);
     }
 }

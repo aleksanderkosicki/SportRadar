@@ -1,6 +1,5 @@
 package com.sportradar;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,8 +26,8 @@ class SportRadar implements MatchTracker {
      */
     @Override
     public void startMatch(String homeTeam, String awayTeam) {
-        String id = String.valueOf(matchIdCounter.incrementAndGet());
-        Match match = new Match(id, homeTeam, awayTeam, LocalDateTime.now());
+        long id = matchIdCounter.incrementAndGet();
+        Match match = new Match(id, homeTeam, awayTeam);
         matches.put(getMatchKey(homeTeam, awayTeam), match);
     }
 
@@ -78,10 +77,11 @@ class SportRadar implements MatchTracker {
      */
     @Override
     public List<Match> getMatchesSummary() {
-        return matches.values().stream()
+        List<Match> values = matches.values().stream().collect(Collectors.toList());
+        return values.stream()
                 .sorted(Comparator
-                        .comparingInt(Match::getTotalScore).reversed()
-                        .thenComparing(Match::getStartTime).reversed())
+                        .comparingInt(Match::getTotalScore)
+                        .thenComparingLong(Match::getId).reversed())
                 .collect(Collectors.toList());
     }
 

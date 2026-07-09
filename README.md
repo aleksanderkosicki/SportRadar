@@ -6,7 +6,7 @@ Assumptions
   - interface is as simple as possible
 
 Reasoning
-  - I will preferrable use java.util.concurrent tools
+  - I will preferable use java.util.concurrent tools
 
 Trade-offs made
   - synchronization
