@@ -13,27 +13,28 @@ public interface MatchTracker {
      *
      * @param homeTeam name of the home team
      * @param awayTeam name of the away team
-     * @return the created match
      */
-    Match startMatch(String homeTeam, String awayTeam);
+    void startMatch(String homeTeam, String awayTeam);
 
     /**
      * Updates the score of an in-progress match.
      *
-     * @param matchId the ID of the match to update
+     * @param homeTeam name of the home team
+     * @param awayTeam name of the away team
      * @param homeScore the home team's new score
      * @param awayScore the away team's new score
      * @throws IllegalArgumentException if the match does not exist
      */
-    void updateScore(String matchId, int homeScore, int awayScore);
+    void updateScore(String homeTeam, String awayTeam, int homeScore, int awayScore);
 
     /**
      * Finishes a match and removes it from tracking.
      *
-     * @param matchId the ID of the match to finish
+     * @param homeTeam name of the home team
+     * @param awayTeam name of the away team
      * @throws IllegalArgumentException if the match does not exist
      */
-    void finishMatch(String matchId);
+    void finishMatch(String homeTeam, String awayTeam);
 
     /**
      * Gets a summary of all matches in progress, ordered by:
