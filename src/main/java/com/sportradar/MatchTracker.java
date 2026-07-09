@@ -9,14 +9,13 @@ import java.util.List;
 public interface MatchTracker {
     /**
      * Starts a new match.
+     * The match ID is assigned internally and thread-safely.
      *
-     * @param id unique identifier for the match
      * @param homeTeam name of the home team
      * @param awayTeam name of the away team
      * @return the created match
-     * @throws IllegalArgumentException if a match with the same ID already exists
      */
-    Match startMatch(String id, String homeTeam, String awayTeam);
+    Match startMatch(String homeTeam, String awayTeam);
 
     /**
      * Updates the score of an in-progress match.
