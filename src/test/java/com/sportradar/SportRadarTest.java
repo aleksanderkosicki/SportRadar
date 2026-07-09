@@ -17,8 +17,12 @@ class SportRadarTest {
 
     @Test
     void testStartMatch() {
-        Match match = matchTracker.startMatch("match1", "Mexico", "Canada");
-        assertNotNull(match);
+        matchTracker.startMatch("Mexico", "Canada");
+        
+        // Verify match exists in summary
+        List<Match> summary = matchTracker.getMatchesSummary();
+        assertEquals(1, summary.size());
+        Match match = summary.get(0);
         assertEquals("Mexico", match.getHomeTeam());
         assertEquals("Canada", match.getAwayTeam());
         assertEquals(0, match.getHomeScore());
@@ -26,100 +30,100 @@ class SportRadarTest {
     }
 
     @Test
-    void testStartMatchDuplicateId() {
-        matchTracker.startMatch("match1", "Mexico", "Canada");
-        assertThrows(IllegalArgumentException.class, () ->
-                matchTracker.startMatch("match1", "Spain", "Brazil")
-        );
-    }
-
-    @Test
     void testUpdateScore() {
-        matchTracker.startMatch("match1", "Mexico", "Canada");
-        matchTracker.updateScore("match1", 0, 5);
-        Match match = matchTracker.startMatch("match1", "Mexico", "Canada");
+        matchTracker.startMatch("Mexico", "Canada");
+        matchTracker.updateScore("Mexico", "Canada", 0, 5);
+        
+        List<Match> summary = matchTracker.getMatchesSummary();
+        Match match = summary.get(0);
         assertEquals(0, match.getHomeScore());
         assertEquals(5, match.getAwayScore());
     }
 
     @Test
     void testUpdateScoreNegative() {
-        matchTracker.startMatch("match1", "Mexico", "Canada");
+        matchTracker.startMatch("Mexico", "Canada");
         assertThrows(IllegalArgumentException.class, () ->
-                matchTracker.updateScore("match1", -1, 5)
+                matchTracker.updateScore("Mexico", "Canada", -1, 5)
         );
     }
 
     @Test
     void testUpdateScoreNonExistentMatch() {
         assertThrows(IllegalArgumentException.class, () ->
-                matchTracker.updateScore("nonexistent", 1, 1)
+                matchTracker.updateScore("NonExistent", "Teams")
         );
     }
 
     @Test
     void testFinishMatch() {
-        matchTracker.startMatch("match1", "Mexico", "Canada");
-        matchTracker.updateScore("match1", 0, 5);
+        matchTracker.startMatch("Mexico", "Canada");
+        matchTracker.updateScore("Mexico", "Canada", 0, 5);
         
         // Finish the match
-        matchTracker.finishMatch("match1");
+        matchTracker.finishMatch("Mexico", "Canada");
         
         // Verify match is removed from summary
         List<Match> summary = matchTracker.getMatchesSummary();
-        assertFalse(summary.stream().anyMatch(m -> m.getId().equals("match1")));
+        assertEquals(0, summary.size());
     }
 
     @Test
     void testFinishNonExistentMatch() {
         assertThrows(IllegalArgumentException.class, () ->
-                matchTracker.finishMatch("nonexistent")
+                matchTracker.finishMatch("NonExistent", "Teams")
         );
     }
 
     @Test
     void testGetMatchesSummaryOrdering() throws InterruptedException {
         // Create matches in the specified order
-        matchTracker.startMatch("match1", "Mexico", "Canada");
+        matchTracker.startMatch("Mexico", "Canada");
         Thread.sleep(10); // Small delay to ensure different timestamps
-        matchTracker.startMatch("match2", "Spain", "Brazil");
+        matchTracker.startMatch("Spain", "Brazil");
         Thread.sleep(10);
-        matchTracker.startMatch("match3", "Germany", "France");
+        matchTracker.startMatch("Germany", "France");
         Thread.sleep(10);
-        matchTracker.startMatch("match4", "Uruguay", "Italy");
+        matchTracker.startMatch("Uruguay", "Italy");
         Thread.sleep(10);
-        matchTracker.startMatch("match5", "Argentina", "Australia");
+        matchTracker.startMatch("Argentina", "Australia");
 
         // Update scores
-        matchTracker.updateScore("match1", 0, 5);     // Total: 5
-        matchTracker.updateScore("match2", 10, 2);    // Total: 12
-        matchTracker.updateScore("match3", 2, 2);     // Total: 4
-        matchTracker.updateScore("match4", 6, 6);     // Total: 12
-        matchTracker.updateScore("match5", 3, 1);     // Total: 4
+        matchTracker.updateScore("Mexico", "Canada", 0, 5);       // Total: 5
+        matchTracker.updateScore("Spain", "Brazil", 10, 2);       // Total: 12
+        matchTracker.updateScore("Germany", "France", 2, 2);      // Total: 4
+        matchTracker.updateScore("Uruguay", "Italy", 6, 6);       // Total: 12
+        matchTracker.updateScore("Argentina", "Australia", 3, 1); // Total: 4
 
         List<Match> summary = matchTracker.getMatchesSummary();
 
         // Verify ordering
         assertEquals(5, summary.size());
-        assertEquals("match4", summary.get(0).getId()); // Uruguay 6-6 (total 12, started 4th)
-        assertEquals("match2", summary.get(1).getId()); // Spain 10-2 (total 12, started 2nd)
-        assertEquals("match1", summary.get(2).getId()); // Mexico 0-5 (total 5)
-        assertEquals("match5", summary.get(3).getId()); // Argentina 3-1 (total 4, started 5th)
-        assertEquals("match3", summary.get(4).getId()); // Germany 2-2 (total 4, started 3rd)
+        assertEquals("Uruguay", summary.get(0).getHomeTeam());    // Uruguay 6-6 (total 12, started 4th)
+        assertEquals("Italy", summary.get(0).getAwayTeam());
+        assertEquals("Spain", summary.get(1).getHomeTeam());      // Spain 10-2 (total 12, started 2nd)
+        assertEquals("Brazil", summary.get(1).getAwayTeam());
+        assertEquals("Mexico", summary.get(2).getHomeTeam());     // Mexico 0-5 (total 5)
+        assertEquals("Canada", summary.get(2).getAwayTeam());
+        assertEquals("Argentina", summary.get(3).getHomeTeam());  // Argentina 3-1 (total 4, started 5th)
+        assertEquals("Australia", summary.get(3).getAwayTeam());
+        assertEquals("Germany", summary.get(4).getHomeTeam());    // Germany 2-2 (total 4, started 3rd)
+        assertEquals("France", summary.get(4).getAwayTeam());
     }
 
     @Test
     void testGetMatchesSummaryFinishedMatchesRemoved() {
-        matchTracker.startMatch("match1", "Mexico", "Canada");
-        matchTracker.startMatch("match2", "Spain", "Brazil");
-        matchTracker.updateScore("match1", 0, 5);
-        matchTracker.updateScore("match2", 10, 2);
-        matchTracker.finishMatch("match1");
+        matchTracker.startMatch("Mexico", "Canada");
+        matchTracker.startMatch("Spain", "Brazil");
+        matchTracker.updateScore("Mexico", "Canada", 0, 5);
+        matchTracker.updateScore("Spain", "Brazil", 10, 2);
+        matchTracker.finishMatch("Mexico", "Canada");
 
         List<Match> summary = matchTracker.getMatchesSummary();
 
-        // Only match2 should be in the summary
+        // Only Spain vs Brazil should be in the summary
         assertEquals(1, summary.size());
-        assertEquals("match2", summary.get(0).getId());
+        assertEquals("Spain", summary.get(0).getHomeTeam());
+        assertEquals("Brazil", summary.get(0).getAwayTeam());
     }
 }
