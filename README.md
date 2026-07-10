@@ -11,9 +11,12 @@ Reasoning
     have a dedicated thread for picking the tasks from the queue 
   
 Trade-offs made
-  - heavy synchronization to handle simultaneous interfering score updates
-    (i.e. one new update starts when we are in the middle of other). The initial
-    solution suggested by AI with the synchronized collection was prone to such a problems
+  - synchronization to handle simultaneous interfering score updates
+    (i.e. one new update starts when we are in the middle of others)
+  - I tried to keep project simple, basing on the AI initialcode. If there are performance or
+    synchronization problems, the following improvements are possible:
+    - keeping the match information in the sorted synchronized collection
+    - writing all requests to synchronized queue and having a dedicated worker thread to pick and execute them
 
 Extra feature in the score board
   - list three teams wth the highest score
