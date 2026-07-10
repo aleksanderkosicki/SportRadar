@@ -44,4 +44,15 @@ public interface MatchTracker {
      * @return list of matches in progress, ordered as specified
      */
     List<Match> getMatchesSummary();
+
+    /**
+     * Gets three teams with the highest score.
+     * Highest score teams go first. Teams ex aequo are sorted alphabetically
+     *
+     * Notice there might be more results than three if there are teams ex aequo or
+     * there might be fewer results if there is only one or zero matches
+     *
+     * @return teams names with assigned scores
+     */
+    List<String> getTopThreeTeams();
 }

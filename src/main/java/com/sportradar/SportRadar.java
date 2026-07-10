@@ -121,6 +121,53 @@ class SportRadar implements MatchTracker {
     }
 
     /**
+     * Gets three teams with the highest score.
+     * Highest score teams go first. Teams ex aequo are sorted alphabetically
+     *
+     * Notice there might be more results than three if there are teams ex aequo or
+     * there might be fewer results if there is only one or zero matches ongoing
+     * Teams ex aequo are sorted alphabetically
+     *
+     * @return teams names with assigned scores
+     */
+    @Override
+    public List<String> getTopThreeTeams() {
+        // Create explicit snapshot to protect against concurrent modifications during sorting
+        List<Match> snapshot = new ArrayList<>(matches.values());
+
+        TreeMap<Integer, SortedSet<String>> scoreTable = new TreeMap<>();
+        for (Match match : snapshot){
+            addScores(scoreTable, match.getHomeScore(), match.getHomeTeam());
+            addScores(scoreTable, match.getAwayScore(), match.getAwayTeam());
+        }
+
+        List<String> result = new LinkedList<>();
+
+        int limit = 0;
+        for (Integer score: scoreTable.descendingKeySet()) {
+            SortedSet<String> teams = scoreTable.get(score);
+            for (String team : teams) {
+                result.add(team + " " + score);
+            }
+
+            limit += teams.size();
+            if (limit >= 3) {
+                break;
+            }
+        }
+        return result;
+    }
+
+    private static void addScores(TreeMap<Integer, SortedSet<String>> scoreTable, int score, String team) {
+        SortedSet<String> teams = scoreTable.get(score);
+        if (teams == null) {
+            teams = new TreeSet<>();
+        }
+        teams.add(team);
+        scoreTable.put(score, teams);
+    }
+
+    /**
      * Generates a unique key for a match based on team names.
      * (Package-private helper method)
      */

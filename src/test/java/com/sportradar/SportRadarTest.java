@@ -3,8 +3,7 @@ package com.sportradar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -179,5 +178,69 @@ class SportRadarTest {
                 assertTrue(a.getTotalScore() >= b.getTotalScore());
             }
         }
+    }
+
+    @Test
+    void testGetTopThreeTeams() throws InterruptedException {
+        // Create matches in the specified order
+        matchTracker.startMatch("Mexico", "Canada");
+        matchTracker.startMatch("Spain", "Brazil");
+        matchTracker.startMatch("Germany", "France");
+        matchTracker.startMatch("Uruguay", "Italy");
+        matchTracker.startMatch("Argentina", "Australia");
+
+        // Update scores
+        matchTracker.updateScore("Mexico", "Canada", 0, 5);       // Total: 5
+        matchTracker.updateScore("Spain", "Brazil", 10, 2);       // Total: 12
+        matchTracker.updateScore("Germany", "France", 2, 2);      // Total: 4
+        matchTracker.updateScore("Uruguay", "Italy", 6, 6);       // Total: 12
+        matchTracker.updateScore("Argentina", "Australia", 3, 1); // Total: 4
+
+        List<String> topThree = matchTracker.getTopThreeTeams();
+
+        assertEquals(3, topThree.size());
+        assertEquals(topThree.get(0),"Spain 10");
+        assertEquals(topThree.get(1),"Italy 6");
+        assertEquals(topThree.get(2),"Uruguay 6");
+    }
+
+    @Test
+    void testGetTopThreeTeams_OnlyOneMatch() throws InterruptedException {
+        // Create matches in the specified order
+        matchTracker.startMatch("Mexico", "Canada");
+
+        // Update scores
+        matchTracker.updateScore("Mexico", "Canada", 0, 5);       // Total: 5
+
+        List<String> topThree = matchTracker.getTopThreeTeams();
+
+        assertEquals(2, topThree.size());
+        assertEquals(topThree.get(0),"Canada 5");
+        assertEquals(topThree.get(1),"Mexico 0");
+    }
+
+    @Test
+    void testGetTopThreeTeams_moreThanThree() throws InterruptedException {
+        // Create matches in the specified order
+        matchTracker.startMatch("Mexico", "Canada");
+        matchTracker.startMatch("Spain", "Brazil");
+        matchTracker.startMatch("Germany", "France");
+        matchTracker.startMatch("Uruguay", "Italy");
+        matchTracker.startMatch("Argentina", "Australia");
+
+        // Update scores
+        matchTracker.updateScore("Mexico", "Canada", 0, 5);       // Total: 5
+        matchTracker.updateScore("Spain", "Brazil", 10, 2);       // Total: 12
+        matchTracker.updateScore("Germany", "France", 6, 2);      // Total: 4
+        matchTracker.updateScore("Uruguay", "Italy", 6, 6);       // Total: 12
+        matchTracker.updateScore("Argentina", "Australia", 3, 1); // Total: 4
+
+        List<String> topThree = matchTracker.getTopThreeTeams();
+
+        assertEquals(4, topThree.size());
+        assertEquals(topThree.get(0),"Spain 10");
+        assertEquals(topThree.get(1),"Germany 6");
+        assertEquals(topThree.get(2),"Italy 6");
+        assertEquals(topThree.get(3),"Uruguay 6");
     }
 }

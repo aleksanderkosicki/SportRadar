@@ -15,4 +15,6 @@ Trade-offs made
     (i.e. one new update starts when we are in the middle of other). The initial
     solution suggested by AI with the synchronized collection was prone to such a problems
 
+Extra feature in the score board
+  - list three teams wth the highest score
 
