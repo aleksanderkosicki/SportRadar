@@ -80,13 +80,9 @@ class SportRadarTest {
     void testGetMatchesSummaryOrdering() throws InterruptedException {
         // Create matches in the specified order
         matchTracker.startMatch("Mexico", "Canada");
-        Thread.sleep(10); // Small delay to ensure different timestamps
         matchTracker.startMatch("Spain", "Brazil");
-        Thread.sleep(10);
         matchTracker.startMatch("Germany", "France");
-        Thread.sleep(10);
         matchTracker.startMatch("Uruguay", "Italy");
-        Thread.sleep(10);
         matchTracker.startMatch("Argentina", "Australia");
 
         // Update scores
