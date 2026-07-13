@@ -25,6 +25,7 @@ class SportRadar implements MatchTracker {
      *
      * @param homeTeam name of the home team
      * @param awayTeam name of the away team
+     * @throws IllegalArgumentException if the match has already been started
      */
     @Override
     public void startMatch(String homeTeam, String awayTeam) {

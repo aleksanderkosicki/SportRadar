@@ -13,6 +13,7 @@ public interface MatchTracker {
      *
      * @param homeTeam name of the home team
      * @param awayTeam name of the away team
+     * @throws IllegalArgumentException if the match has already been started
      */
     void startMatch(String homeTeam, String awayTeam);
 
