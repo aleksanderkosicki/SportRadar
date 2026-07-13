@@ -7,7 +7,7 @@ import java.util.Objects;
  * Represents an immutable sports match with home and away teams.
  * To update the score, use the updateScore method which returns a new Match instance.
  */
-public final class Match {
+final class Match {
     private final long id;
     private final String homeTeam;
     private final String awayTeam;

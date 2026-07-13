@@ -107,7 +107,7 @@ class SportRadar implements MatchTracker {
      * @return list of matches in progress, ordered as specified
      */
     @Override
-    public List<Match> getMatchesSummary() {
+    public List<String> getMatchesSummary() {
         // Create explicit snapshot to protect against concurrent modifications during sorting
         List<Match> snapshot = new ArrayList<>(matches.values());
         
@@ -116,6 +116,7 @@ class SportRadar implements MatchTracker {
                         .comparingInt(Match::getTotalScore)
                         .thenComparingLong(Match::getId)
                         .reversed())
+                .map(m -> m.getHomeScore() + " " + m.getHomeTeam() + " - " + m.getAwayTeam() + " " +m.getAwayScore())
                 .collect(Collectors.toList());
     }
 

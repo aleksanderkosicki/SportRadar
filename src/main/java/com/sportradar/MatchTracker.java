@@ -43,7 +43,7 @@ public interface MatchTracker {
      *
      * @return list of matches in progress, ordered as specified
      */
-    List<Match> getMatchesSummary();
+    List<String> getMatchesSummary();
 
     /**
      * Gets three teams with the highest score.

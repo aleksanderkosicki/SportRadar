@@ -21,13 +21,10 @@ class SportRadarTest {
         matchTracker.startMatch("Mexico", "Canada");
         
         // Verify match exists in summary
-        List<Match> summary = matchTracker.getMatchesSummary();
+        List<String> summary = matchTracker.getMatchesSummary();
         assertEquals(1, summary.size());
-        Match match = summary.get(0);
-        assertEquals("Mexico", match.getHomeTeam());
-        assertEquals("Canada", match.getAwayTeam());
-        assertEquals(0, match.getHomeScore());
-        assertEquals(0, match.getAwayScore());
+        String match = summary.get(0);
+        assertEquals("0 Mexico - Canada 0", match);
     }
 
     @Test
@@ -35,10 +32,10 @@ class SportRadarTest {
         matchTracker.startMatch("Mexico", "Canada");
         matchTracker.updateScore("Mexico", "Canada", 0, 5);
         
-        List<Match> summary = matchTracker.getMatchesSummary();
-        Match match = summary.get(0);
-        assertEquals(0, match.getHomeScore());
-        assertEquals(5, match.getAwayScore());
+        List<String> summary = matchTracker.getMatchesSummary();
+        assertEquals(1, summary.size());
+        String match = summary.get(0);
+        assertEquals("0 Mexico - Canada 5", match);
     }
 
     @Test
@@ -65,7 +62,7 @@ class SportRadarTest {
         matchTracker.finishMatch("Mexico", "Canada");
         
         // Verify match is removed from summary
-        List<Match> summary = matchTracker.getMatchesSummary();
+        List<String> summary = matchTracker.getMatchesSummary();
         assertEquals(0, summary.size());
     }
 
@@ -92,20 +89,15 @@ class SportRadarTest {
         matchTracker.updateScore("Uruguay", "Italy", 6, 6);       // Total: 12
         matchTracker.updateScore("Argentina", "Australia", 3, 1); // Total: 4
 
-        List<Match> summary = matchTracker.getMatchesSummary();
+        List<String> summary = matchTracker.getMatchesSummary();
 
         // Verify ordering
         assertEquals(5, summary.size());
-        assertEquals("Uruguay", summary.get(0).getHomeTeam());    // Uruguay 6-6 (total 12, started 4th)
-        assertEquals("Italy", summary.get(0).getAwayTeam());
-        assertEquals("Spain", summary.get(1).getHomeTeam());      // Spain 10-2 (total 12, started 2nd)
-        assertEquals("Brazil", summary.get(1).getAwayTeam());
-        assertEquals("Mexico", summary.get(2).getHomeTeam());     // Mexico 0-5 (total 5)
-        assertEquals("Canada", summary.get(2).getAwayTeam());
-        assertEquals("Argentina", summary.get(3).getHomeTeam());  // Argentina 3-1 (total 4, started 5th)
-        assertEquals("Australia", summary.get(3).getAwayTeam());
-        assertEquals("Germany", summary.get(4).getHomeTeam());    // Germany 2-2 (total 4, started 3rd)
-        assertEquals("France", summary.get(4).getAwayTeam());
+        assertEquals(summary.get(0), "6 Uruguay - Italy 6"); // Uruguay 6-6 (total 12, started 4th)
+        assertEquals(summary.get(1), "10 Spain - Brazil 2"); // Spain 10-2 (total 12, started 2nd)
+        assertEquals(summary.get(2), "0 Mexico - Canada 5"); // Mexico 0-5 (total 5)
+        assertEquals(summary.get(3), "3 Argentina - Australia 1"); // Argentina 3-1 (total 4, started 5th)
+        assertEquals(summary.get(4), "2 Germany - France 2"); // Germany 2-2 (total 4, started 3rd)
     }
 
     @Test
@@ -116,12 +108,11 @@ class SportRadarTest {
         matchTracker.updateScore("Spain", "Brazil", 10, 2);
         matchTracker.finishMatch("Mexico", "Canada");
 
-        List<Match> summary = matchTracker.getMatchesSummary();
+        List<String> summary = matchTracker.getMatchesSummary();
 
         // Only Spain vs Brazil should be in the summary
         assertEquals(1, summary.size());
-        assertEquals("Spain", summary.get(0).getHomeTeam());
-        assertEquals("Brazil", summary.get(0).getAwayTeam());
+        assertEquals(summary.get(0), "10 Spain - Brazil 2");
     }
 
     @Test
@@ -158,7 +149,7 @@ class SportRadarTest {
                     throw new RuntimeException(e);
                 }
                 if (threadNum == 0) {
-                    List<Match> matches = matchTracker.getMatchesSummary();
+                    List<String> matches = matchTracker.getMatchesSummary();
                     assertEquals(100, matches.size());
                     assertMatchesInOrder(matches);
                 }
@@ -166,14 +157,21 @@ class SportRadarTest {
         }
     }
 
-    private void assertMatchesInOrder(List<Match> matches) {
+    private void assertMatchesInOrder(List<String> matches) {
         for(int i = 0; i < matches.size(); i++) {
             for (int j = i + 1; j < matches.size(); j++) {
-                Match a = matches.get(i);
-                Match b = matches.get(j);
-                assertTrue(a.getTotalScore() >= b.getTotalScore());
+                String matchA = matches.get(i);
+                int totalScoreA = getTotalScore(matchA);
+                String matchB = matches.get(j);
+                int totalScoreB = getTotalScore(matchB);
+                assertTrue(totalScoreA >= totalScoreB);
             }
         }
+    }
+
+    private static int getTotalScore(String match) {
+        String parts[] = match.split(" ");
+        return Integer.parseInt(parts[0]) + Integer.parseInt(parts[4]);
     }
 
     @Test
